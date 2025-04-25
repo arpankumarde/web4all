@@ -13,20 +13,64 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from dotenv import load_dotenv
+import pathlib
 
 # Load environment variables
 load_dotenv()
 
+# Create static directory if it doesn't exist
+static_dir = pathlib.Path(__file__).parent / "static"
+static_dir.mkdir(exist_ok=True)
+
+
+# Helper function to load logo and return base64 encoding
+def get_logo_base64():
+    logo_path = static_dir / "logo.png"
+    if logo_path.exists():
+        with open(logo_path, "rb") as f:
+            logo_data = f.read()
+        return base64.b64encode(logo_data).decode()
+    return None
+
+
+# Get logo as base64 for both favicon and header display
+logo_b64 = get_logo_base64()
+
+# Set page configuration with logo as favicon if available
+if logo_b64:
+    favicon = f"data:image/png;base64,{logo_b64}"
+else:
+    favicon = "♿"  # Default favicon if logo not available
+
 # Set page configuration
 st.set_page_config(
     page_title="Web4All Accessibility Checker",
-    page_icon="♿",
+    page_icon=favicon,
     layout="centered",
     initial_sidebar_state="expanded",
     menu_items={
         "About": "Web4All Accessibility Checker helps evaluate website accessibility."
     },
 )
+
+
+# Helper function to display logo
+def display_logo():
+    if logo_b64:
+        st.markdown(
+            f"""
+            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                <img src="data:image/png;base64,{logo_b64}" alt="Web4All Logo" style="height: 80px; margin-right: 20px;">
+                <h1>Web4All Accessibility Checker</h1>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        # Display a message if logo is missing
+        st.warning(f"Logo file not found. Please place a logo.png file in {static_dir}")
+        st.title("Web4All Accessibility Checker")
+
 
 # Set light mode theme
 st.markdown(
@@ -73,8 +117,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# App header
-st.title("Web4All Accessibility Checker")
+# App header with logo
+display_logo()  # Use the new function to display logo
+
 st.markdown(
     """
 This tool analyzes web pages for accessibility issues and provides suggestions for improvement.
